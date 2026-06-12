@@ -156,7 +156,33 @@
             <div class="precio">#${m.numero}${m.ciudad ? ' · ' + m.ciudad : ''}</div>
           </div>
         </div>`).join('')
-      : '<p class="muted small">Sin resultados</p>';
+      : '';
+    // Si lo que tecleó no coincide con ningún resultado, ofrecer capturarlo nuevo
+    const txt = (filtro || '').trim();
+    $('#nuevoModBox').hidden = !(txt.length >= 2 && items.length === 0);
+  }
+
+  function usarNuevoModelorama() {
+    const nombre = ($('#buscaModelorama').value || '').trim().toUpperCase();
+    if (!nombre) { toast('Escribe el nombre', 'error'); return; }
+    let numero = Number($('#nuevoModNum').value) || 0;
+    if (!numero) {
+      // genera un número temporal único basado en timestamp
+      numero = 900000000 + Math.floor(Math.random() * 99999999);
+    }
+    const m = { numero, nombre, sag: '', estado: '', ciudad: '' };
+    // Si no existe ya, lo agregamos al catálogo local
+    if (!state.modeloramas.find(x => Number(x.numero) === Number(numero))) {
+      state.modeloramas.push(m);
+      guardarLS('cat_modeloramas', state.modeloramas);
+      // Y lo encolamos para subir al backend
+      state.pendientes.push({ accion: 'modelorama_alta', numero, nombre, _id: 'm_' + Date.now() });
+      guardarLS('pendientes', state.pendientes);
+      setEstadoSync();
+    }
+    $('#nuevoModNum').value = '';
+    $('#nuevoModBox').hidden = true;
+    elegirModelorama(m);
   }
 
   function elegirModelorama(m) {
@@ -678,6 +704,7 @@
       const m = state.modeloramas.find(x => String(x.numero) === it.dataset.num);
       if (m) elegirModelorama(m);
     });
+    $('#btnUsarNuevoMod').addEventListener('click', usarNuevoModelorama);
     $('#btnAbrirProductos').addEventListener('click', abrirSelectorProductos);
     $('#btnCarritoIcon').addEventListener('click', abrirSelectorProductos);
     $('#buscaProd').addEventListener('input', e => renderPickerProductos(e.target.value));

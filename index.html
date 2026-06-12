@@ -109,7 +109,12 @@
         <h3>Elegir modelorama</h3>
         <button class="link" data-cerrar-modal>Cerrar</button>
       </div>
-      <input type="search" id="buscaModelorama" placeholder="Buscar por número o nombre…" autocomplete="off" />
+      <input type="search" id="buscaModelorama" inputmode="search" autocapitalize="characters" placeholder="Escribe número o nombre…" autocomplete="off" />
+      <div id="nuevoModBox" hidden style="margin:10px 0; padding:12px; background:#fef0f0; border-radius:10px; border-left:3px solid var(--primary);">
+        <p class="muted small" style="margin:0 0 8px;">No está en la lista. Puedes capturarlo nuevo:</p>
+        <input type="tel" id="nuevoModNum" inputmode="numeric" pattern="[0-9]*" placeholder="Número (opcional)" />
+        <button class="btn primary" id="btnUsarNuevoMod" style="margin-top:6px;">✓ Usar este nombre</button>
+      </div>
       <div id="listaModeloramas" class="prod-picker"></div>
     </div>
   </div>

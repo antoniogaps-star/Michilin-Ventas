@@ -1,4 +1,4 @@
-const CACHE = 'michilin-v4';
+const CACHE = 'michilin-v5';
 const ASSETS = [
   './',
   './index.html',
