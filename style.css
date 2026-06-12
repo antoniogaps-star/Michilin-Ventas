@@ -1,0 +1,264 @@
+:root {
+  --primary: #d62828;
+  --primary-dark: #a31818;
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --text: #1c1c1e;
+  --muted: #6b6b70;
+  --border: #e3e3e8;
+  --ok: #2e7d32;
+  --warn: #ed6c02;
+  --info: #1565c0;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 16px; }
+body { padding-bottom: env(safe-area-inset-bottom); }
+
+#topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--primary); color: #fff;
+  padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top));
+  box-shadow: var(--shadow);
+}
+#topbar h1 { flex: 1; margin: 0; font-size: 18px; font-weight: 600; }
+#topbar .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,.2); }
+#topbar .badge.ok { background: var(--ok); }
+#topbar .badge.warn { background: var(--warn); }
+#btnBack { background: transparent; border: 0; color: #fff; font-size: 24px; padding: 0 6px; cursor: pointer; }
+
+#app { padding: 16px; max-width: 640px; margin: 0 auto; }
+.screen { display: none; }
+.screen.active { display: block; }
+
+.hero h2 { margin: 8px 0 2px; font-size: 24px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+
+.btn {
+  display: block; width: 100%;
+  padding: 14px 16px; margin: 10px 0;
+  border-radius: 12px; border: 1px solid var(--border);
+  background: var(--card); color: var(--text);
+  font-size: 16px; font-weight: 500;
+  text-align: left; cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.btn.primary { background: var(--primary); color: #fff; border-color: var(--primary-dark); text-align: center; }
+.btn.primary:active { background: var(--primary-dark); }
+.btn.big { padding: 18px; font-size: 17px; }
+.btn.ghost { background: transparent; box-shadow: none; border-color: transparent; color: var(--muted); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.link { background: 0; border: 0; color: var(--primary); padding: 0; font-size: 14px; cursor: pointer; font-weight: 500; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin: 12px 0;
+  box-shadow: var(--shadow);
+  position: relative;
+}
+.card label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+input, textarea, select {
+  width: 100%; padding: 12px; font-size: 16px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: #fafafa; margin-bottom: 8px;
+}
+input:focus, textarea:focus { outline: 2px solid var(--primary); background: #fff; }
+textarea { resize: vertical; font-family: inherit; }
+
+.row { display: flex; align-items: center; gap: 8px; }
+.row.between { justify-content: space-between; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  gap: 8px;
+}
+
+.autocomplete {
+  list-style: none; padding: 0; margin: 6px 0 0;
+  max-height: 240px; overflow: auto;
+  background: #fff; border: 1px solid var(--border); border-radius: 10px;
+}
+.autocomplete:empty { display: none; }
+.autocomplete li { padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.autocomplete li:last-child { border-bottom: 0; }
+.autocomplete li:active { background: #f0f0f0; }
+.autocomplete li small { display: block; color: var(--muted); font-size: 12px; }
+
+.selBox {
+  margin-top: 10px; padding: 10px 12px;
+  background: #fef0f0; border-left: 3px solid var(--primary);
+  border-radius: 6px;
+}
+.selBox strong { display: block; }
+.selBox small { color: var(--muted); }
+
+/* === Carrito === */
+.cart-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+}
+.cart-table th {
+  text-align: left; padding: 8px 4px;
+  font-size: 11px; text-transform: uppercase;
+  color: var(--muted); border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+.cart-table th:nth-child(2), .cart-table th:nth-child(3), .cart-table th:nth-child(4) { text-align: center; }
+.cart-table td {
+  padding: 6px 4px; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.cart-table td.prod { font-weight: 500; }
+.cart-table input {
+  width: 100%; padding: 6px; margin: 0;
+  font-size: 14px; text-align: center;
+  border-radius: 6px;
+}
+.cart-table .col-total { text-align: right; font-weight: 600; color: var(--primary); white-space: nowrap; }
+.cart-table .btn-del {
+  background: transparent; border: 0; color: #b00; font-size: 18px;
+  padding: 4px 6px; cursor: pointer;
+}
+
+.cart-fab {
+  position: absolute; top: 10px; right: 14px;
+  width: 44px; height: 44px;
+  border-radius: 50%; border: 0;
+  background: var(--primary); color: #fff;
+  font-size: 20px; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(214,40,40,.4);
+  display: none;
+}
+
+.totales { background: #fff8f8; }
+.totales .row { padding: 4px 0; }
+.totales .total {
+  border-top: 2px solid var(--primary);
+  margin-top: 6px; padding-top: 10px;
+  font-size: 18px;
+}
+.totales .total strong { color: var(--primary); font-size: 22px; }
+
+/* === Botonera de 3 botones === */
+.botonera {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0 30px;
+}
+.btn-accion {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px;
+  padding: 16px 8px;
+  border-radius: 14px; border: 0;
+  font-size: 22px; cursor: pointer;
+  color: #fff; font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  min-height: 78px;
+}
+.btn-accion small { font-size: 12px; font-weight: 500; }
+.btn-accion.descuento { background: var(--info); }
+.btn-accion.imprimir { background: #555; }
+.btn-accion.guardar { background: var(--ok); }
+.btn-accion[disabled] { opacity: .45; }
+
+/* === Modal === */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex; align-items: flex-end;
+  z-index: 100;
+}
+.modal-card {
+  background: #fff; width: 100%;
+  border-radius: 16px 16px 0 0;
+  padding: 20px; max-height: 85vh; overflow: auto;
+}
+.modal-card.tall { height: 85vh; }
+.modal-card h3 { margin-top: 0; }
+.radio { font-size: 14px; padding: 6px 0; }
+.radio input { width: auto; margin-right: 6px; }
+
+/* === Picker de productos (modal) === */
+.prod-picker { margin-top: 10px; }
+.prod-pick-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px; border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.prod-pick-item:active { background: #f5f5f5; }
+.prod-pick-item .nombre { font-size: 14px; }
+.prod-pick-item .precio { color: var(--muted); font-size: 12px; }
+.prod-pick-item.added { background: #e8f5e9; }
+.prod-pick-item.added::after { content: "✓"; color: var(--ok); margin-left: 8px; }
+
+/* === Ticket impreso === */
+.ticket-modal { max-width: 360px; margin: 0 auto; }
+.ticket {
+  font-family: "Courier New", monospace;
+  font-size: 12px; line-height: 1.4;
+  white-space: pre-wrap;
+  background: #fff; padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+/* === Toast === */
+.toast {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff;
+  padding: 12px 18px; border-radius: 24px;
+  z-index: 200; font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+.toast.ok { background: var(--ok); }
+.toast.error { background: var(--primary); }
+.toast.warn { background: var(--warn); }
+
+/* === Historial e informes === */
+.hist-item {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; margin: 8px 0;
+  box-shadow: var(--shadow);
+}
+.hist-item .hi-head { display: flex; justify-content: space-between; font-weight: 500; }
+.hist-item .hi-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.hist-item ul { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+.hist-item button { margin-top: 6px; font-size: 12px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: #fff; cursor: pointer; }
+
+/* === Inventario === */
+.inv-row {
+  display: grid; grid-template-columns: 1fr 70px 70px 70px;
+  gap: 6px; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.inv-row.head { font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; }
+.inv-row input { padding: 6px; font-size: 14px; text-align: center; margin: 0; }
+
+/* === Lista productos config === */
+.prod-cfg-row {
+  display: grid; grid-template-columns: 1fr 80px 40px;
+  gap: 6px; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.prod-cfg-row input { padding: 6px; margin: 0; font-size: 13px; }
+
+@media print {
+  body * { visibility: hidden; }
+  #ticketRender, #ticketRender * { visibility: visible; }
+  #ticketRender {
+    position: absolute; left: 0; top: 0; width: 100%;
+    border: 0; padding: 0; font-size: 11px;
+  }
+}

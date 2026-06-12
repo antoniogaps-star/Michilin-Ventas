@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#d62828" />
+<title>Michilin Ventas</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header id="topbar">
+  <button id="btnBack" class="ghost" hidden>‹</button>
+  <h1 id="titulo">Michilin</h1>
+  <span id="estadoSync" class="badge">·</span>
+</header>
+
+<main id="app">
+
+  <!-- Pantalla: Inicio -->
+  <section data-screen="home" class="screen active">
+    <div class="hero">
+      <h2 id="saludo">Hola</h2>
+      <p id="fechaHoy" class="muted"></p>
+    </div>
+    <button class="btn primary big" data-go="venta">+ Nueva venta</button>
+    <button class="btn" data-go="historial">📋 Ventas del día</button>
+    <button class="btn ghost" data-go="config">⚙️ Configuración</button>
+    <div id="resumenDia" class="card"></div>
+  </section>
+
+  <!-- Pantalla: Venta (NUEVA estructura) -->
+  <section data-screen="venta" class="screen">
+
+    <!-- 1. Fecha -->
+    <div class="card">
+      <label>Fecha</label>
+      <input type="date" id="fechaVenta" />
+    </div>
+
+    <!-- 2. Modelorama -->
+    <div class="card">
+      <label>Modelorama</label>
+      <input type="search" id="buscaModelorama" placeholder="Número o nombre…" autocomplete="off" />
+      <ul id="resultModelorama" class="autocomplete"></ul>
+      <div id="modSel" class="selBox" hidden></div>
+    </div>
+
+    <!-- 3. Carrito de productos -->
+    <div class="card">
+      <div class="row between" style="margin-bottom:8px;">
+        <label style="margin:0;">🛒 Carrito</label>
+        <button class="link" id="btnAbrirProductos">+ Agregar producto</button>
+      </div>
+
+      <div id="carritoVacio" class="muted small" style="padding:14px 0; text-align:center;">
+        Aún no hay productos. Toca <strong>+ Agregar producto</strong> o el ícono 🛒
+      </div>
+
+      <table id="tablaCarrito" class="cart-table" hidden>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Cant.</th>
+            <th>P. Unit</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="carritoBody"></tbody>
+      </table>
+
+      <button id="btnCarritoIcon" class="cart-fab" title="Agregar producto">🛒</button>
+    </div>
+
+    <!-- 4. Totales -->
+    <div class="card totales">
+      <div class="row between"><span>Subtotal</span><strong id="subtotalVenta">$0</strong></div>
+      <div class="row between"><span>Descuento</span><strong id="descuentoVal">-$0</strong></div>
+      <div class="row between total"><span>Total a cobrar</span><strong id="totalVenta">$0</strong></div>
+      <textarea id="notaVenta" placeholder="Nota (opcional)…" rows="2"></textarea>
+    </div>
+
+    <!-- 5. Botones de acción -->
+    <div class="botonera">
+      <button id="btnDescuento" class="btn-accion descuento">
+        <span>%</span><small>Descuento</small>
+      </button>
+      <button id="btnImprimir" class="btn-accion imprimir" disabled>
+        <span>🖨️</span><small>Imprimir ticket</small>
+      </button>
+      <button id="btnGuardar" class="btn-accion guardar" disabled>
+        <span>💾</span><small>Guardar venta</small>
+      </button>
+    </div>
+  </section>
+
+  <!-- Modal: selector de productos -->
+  <div id="modalProductos" class="modal" hidden>
+    <div class="modal-card tall">
+      <div class="row between">
+        <h3>Productos</h3>
+        <button class="link" data-cerrar-modal>Cerrar</button>
+      </div>
+      <input type="search" id="buscaProd" placeholder="Buscar producto…" autocomplete="off" />
+      <div id="listaProductos" class="prod-picker"></div>
+    </div>
+  </div>
+
+  <!-- Modal: descuento -->
+  <div id="modalDescuento" class="modal" hidden>
+    <div class="modal-card">
+      <h3>Aplicar descuento</h3>
+      <div class="row">
+        <label class="radio"><input type="radio" name="tipoDesc" value="$" checked /> Monto ($)</label>
+        <label class="radio"><input type="radio" name="tipoDesc" value="%" /> Porcentaje (%)</label>
+      </div>
+      <input type="number" id="inpDescuento" min="0" step="0.01" placeholder="0" />
+      <input type="text" id="motivoDesc" placeholder="Motivo (opcional)" />
+      <div class="row" style="gap:10px; margin-top:10px;">
+        <button class="btn" data-cerrar-modal>Cancelar</button>
+        <button class="btn primary" id="btnAplicarDesc">Aplicar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: ticket impreso -->
+  <div id="modalTicket" class="modal" hidden>
+    <div class="modal-card ticket-modal">
+      <div id="ticketRender" class="ticket"></div>
+      <div class="row" style="gap:10px;">
+        <button class="btn" data-cerrar-modal>Cerrar</button>
+        <button class="btn primary" id="btnImprimirNow">Imprimir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pantalla: Inventario -->
+  <section data-screen="inventario" class="screen">
+    <div class="card">
+      <label>Fecha</label>
+      <input type="date" id="fechaInv" />
+      <p class="muted small">Captura las cantidades con las que sales a vender hoy.</p>
+    </div>
+    <div id="invList"></div>
+    <button id="btnGuardarInv" class="btn primary big">Guardar inventario</button>
+  </section>
+
+  <!-- Pantalla: Historial -->
+  <section data-screen="historial" class="screen">
+    <div class="card">
+      <label>Fecha</label>
+      <input type="date" id="fechaHist" />
+    </div>
+    <div id="histList"></div>
+    <div id="histTotal" class="card" hidden></div>
+  </section>
+
+  <!-- Pantalla: Configuración (menú principal) -->
+  <section data-screen="config" class="screen">
+    <button class="btn" data-go="productos">🍯 Lista de productos</button>
+    <button class="btn" data-go="inventario">📦 Inventario</button>
+    <button class="btn" data-go="reimpresion">🖨️ Reimpresión de tickets</button>
+    <button class="btn" data-go="informes">📊 Informes</button>
+    <button class="btn" data-go="gastos">💸 Gastos</button>
+    <button class="btn" data-go="conexion">🔌 Conexión backend</button>
+  </section>
+
+  <!-- Sub-pantalla: Productos -->
+  <section data-screen="productos" class="screen">
+    <div class="card">
+      <p class="muted small">Estos son los productos que aparecen en el carrito. Para agregar uno nuevo llena los campos y guarda.</p>
+    </div>
+    <div class="card">
+      <label>Nuevo producto</label>
+      <div class="form-grid">
+        <input type="text" id="nuevoProdNombre" placeholder="Nombre" />
+        <input type="number" id="nuevoProdPrecio" min="0" step="0.01" placeholder="Precio" />
+      </div>
+      <button class="btn primary" id="btnAgregarProd">Agregar</button>
+    </div>
+    <div class="card">
+      <label>Productos actuales</label>
+      <div id="listaProductosConfig"></div>
+    </div>
+  </section>
+
+  <!-- Sub-pantalla: Reimpresión -->
+  <section data-screen="reimpresion" class="screen">
+    <div class="card">
+      <label>Fecha</label>
+      <input type="date" id="fechaReimp" />
+    </div>
+    <div id="listaTickets"></div>
+  </section>
+
+  <!-- Sub-pantalla: Informes -->
+  <section data-screen="informes" class="screen">
+    <div class="card">
+      <label>Periodo</label>
+      <div class="row" style="gap:8px;">
+        <input type="date" id="infDesde" />
+        <input type="date" id="infHasta" />
+      </div>
+      <button class="btn primary" id="btnGenerarInforme">Generar informe</button>
+    </div>
+    <div id="informeRes"></div>
+  </section>
+
+  <!-- Sub-pantalla: Gastos -->
+  <section data-screen="gastos" class="screen">
+    <div class="card">
+      <label>Nuevo gasto</label>
+      <input type="date" id="gastoFecha" />
+      <input type="text" id="gastoConcepto" placeholder="Concepto (gasolina, peaje, …)" />
+      <input type="number" id="gastoMonto" min="0" step="0.01" placeholder="Monto $" />
+      <input type="text" id="gastoNota" placeholder="Nota (opcional)" />
+      <button class="btn primary" id="btnGuardarGasto">Registrar gasto</button>
+    </div>
+    <div class="card">
+      <label>Gastos recientes</label>
+      <div id="listaGastos"></div>
+    </div>
+  </section>
+
+  <!-- Sub-pantalla: Conexión -->
+  <section data-screen="conexion" class="screen">
+    <div class="card">
+      <label>URL del backend (Apps Script Web App)</label>
+      <input type="url" id="cfgUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+      <button id="btnGuardarCfg" class="btn">Guardar URL</button>
+      <button id="btnProbar" class="btn ghost">Probar conexión</button>
+      <p id="cfgEstado" class="muted small"></p>
+    </div>
+    <div class="card">
+      <label>Catálogos</label>
+      <button id="btnRecargar" class="btn">Recargar desde la nube</button>
+      <p class="muted small" id="catInfo"></p>
+    </div>
+    <div class="card">
+      <label>Pendientes por sincronizar</label>
+      <p id="pendInfo" class="muted small">0</p>
+      <button id="btnSync" class="btn">Sincronizar ahora</button>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
