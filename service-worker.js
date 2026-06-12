@@ -1,9 +1,10 @@
-const CACHE = 'michilin-v1';
+const CACHE = 'michilin-v3';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
+  './catalogo.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
@@ -15,24 +16,26 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
 
+// Network-first para HTML/JS/CSS (siempre intenta traer lo más nuevo).
+// Cache fallback solo si no hay red.
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // No cachear llamadas al backend de Apps Script
-  if (url.hostname.includes('script.google.com') || url.hostname.includes('googleusercontent.com')) {
-    return;
-  }
+  if (url.hostname.includes('script.google.com') || url.hostname.includes('googleusercontent.com')) return;
+  if (e.request.method !== 'GET') return;
+
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-      if (e.request.method === 'GET' && res.ok && url.origin === location.origin) {
+    fetch(e.request).then(res => {
+      if (res.ok && url.origin === location.origin) {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
       }
       return res;
-    }).catch(() => cached))
+    }).catch(() => caches.match(e.request))
   );
 });
