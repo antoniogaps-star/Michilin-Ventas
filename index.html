@@ -84,6 +84,9 @@
       <textarea id="notaVenta" placeholder="Nota (opcional)…" rows="2"></textarea>
     </div>
 
+    <!-- Mensaje de qué falta -->
+    <p id="msgFalta" class="muted small" style="text-align:center; margin:8px 0; color:var(--warn); font-weight:500;" hidden></p>
+
     <!-- 5. Botones de acción -->
     <div class="botonera">
       <button id="btnDescuento" class="btn-accion descuento">
@@ -107,6 +110,19 @@
       </div>
       <input type="search" id="buscaProd" placeholder="Buscar producto…" autocomplete="off" />
       <div id="listaProductos" class="prod-picker"></div>
+    </div>
+  </div>
+
+  <!-- Modal: cantidad rápida -->
+  <div id="modalCantidad" class="modal" hidden>
+    <div class="modal-card">
+      <h3 id="modalCantTitulo">Cantidad</h3>
+      <p id="modalCantProd" class="muted small" style="margin:0 0 12px;"></p>
+      <input type="number" id="inpCantidad" inputmode="numeric" min="1" step="1" value="1" style="font-size:24px; text-align:center; padding:18px;" />
+      <div class="row" style="gap:10px; margin-top:10px;">
+        <button class="btn" data-cerrar-modal>Cancelar</button>
+        <button class="btn primary" id="btnAceptarCant">Aceptar</button>
+      </div>
     </div>
   </div>
 

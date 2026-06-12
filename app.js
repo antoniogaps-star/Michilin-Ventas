@@ -180,14 +180,28 @@
   function agregarProducto(fila) {
     const prod = state.productos.find(p => p.fila === fila);
     if (!prod) return;
-    if (state.venta.items[fila]) {
-      state.venta.items[fila].cantidad += 1;
-    } else {
-      state.venta.items[fila] = { producto: prod.nombre, cantidad: 1, precio_unit: prod.precio, fila };
-    }
+    // Abre diálogo de cantidad manual
+    const actual = state.venta.items[fila]?.cantidad || 1;
+    $('#modalCantTitulo').textContent = prod.nombre;
+    $('#modalCantProd').textContent = 'Precio: ' + fmt(prod.precio);
+    $('#inpCantidad').value = actual;
+    $('#inpCantidad').dataset.fila = fila;
+    $('#modalCantidad').hidden = false;
+    setTimeout(() => { $('#inpCantidad').focus(); $('#inpCantidad').select(); }, 100);
+  }
+
+  function aceptarCantidad() {
+    const fila = Number($('#inpCantidad').dataset.fila);
+    const cant = Math.max(0, Math.floor(Number($('#inpCantidad').value) || 0));
+    const prod = state.productos.find(p => p.fila === fila);
+    if (!prod) return;
+    if (cant === 0) delete state.venta.items[fila];
+    else state.venta.items[fila] = { producto: prod.nombre, cantidad: cant, precio_unit: prod.precio, fila };
+    $('#modalCantidad').hidden = true;
     renderCarrito();
     actualizarTotales();
     renderPickerProductos($('#buscaProd').value);
+    toast(`${cant} × ${prod.nombre}`, 'ok');
   }
 
   function actualizarItem(fila, campo, valor) {
@@ -243,9 +257,16 @@
     $('#subtotalVenta').textContent = fmt(subtotal);
     $('#descuentoVal').textContent = '-' + fmt(desc);
     $('#totalVenta').textContent = fmt(total);
-    const valido = state.venta.modelorama && itemsCount > 0 && total >= 0;
+    const sinMod = !state.venta.modelorama;
+    const sinItems = itemsCount === 0;
+    const valido = !sinMod && !sinItems && total >= 0;
     $('#btnGuardar').disabled = !valido;
     $('#btnImprimir').disabled = !valido;
+    const msg = $('#msgFalta');
+    if (sinMod && sinItems) { msg.textContent = '⚠ Falta seleccionar modelorama y agregar productos'; msg.hidden = false; }
+    else if (sinMod) { msg.textContent = '⚠ Falta seleccionar el modelorama'; msg.hidden = false; }
+    else if (sinItems) { msg.textContent = '⚠ Falta agregar productos al carrito'; msg.hidden = false; }
+    else { msg.hidden = true; }
   }
 
   function abrirDescuento() {
@@ -663,6 +684,8 @@
       const b = e.target.closest('[data-quitar]'); if (b) quitarItem(Number(b.dataset.quitar));
     });
 
+    $('#btnAceptarCant').addEventListener('click', aceptarCantidad);
+    $('#inpCantidad').addEventListener('keydown', e => { if (e.key === 'Enter') aceptarCantidad(); });
     $('#btnDescuento').addEventListener('click', abrirDescuento);
     $('#btnAplicarDesc').addEventListener('click', aplicarDescuento);
     $('#btnImprimir').addEventListener('click', imprimirTicket);
