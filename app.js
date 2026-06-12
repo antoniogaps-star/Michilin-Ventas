@@ -404,22 +404,16 @@
     mostrarTicket(payload);
   }
 
-  function lanzarImpresion() {
-    // Intento 1: RawBT (Android, impresoras térmicas BT como MP210)
+  function imprimirBluetooth() {
     const txt = $('#ticketRender').textContent;
     try {
       const enc = encodeURIComponent(txt);
-      const rawbt = `rawbt:${enc}`;
-      // Si la app RawBT está instalada, se abre
-      window.location.href = rawbt;
-      setTimeout(() => {
-        // Fallback: imprimir como página
-        window.print();
-      }, 1500);
+      window.location.href = `rawbt:${enc}`;
     } catch (e) {
-      window.print();
+      toast('No se pudo abrir RawBT. ¿Está instalada?', 'error');
     }
   }
+  function imprimirHoja() { window.print(); }
 
   // ===== Inventario =====
   function cargarInventario() {
@@ -728,7 +722,8 @@
     $('#btnAplicarDesc').addEventListener('click', aplicarDescuento);
     $('#btnImprimir').addEventListener('click', imprimirTicket);
     $('#btnGuardar').addEventListener('click', guardarVenta);
-    $('#btnImprimirNow').addEventListener('click', lanzarImpresion);
+    $('#btnImprimirBT').addEventListener('click', imprimirBluetooth);
+    $('#btnImprimirHoja').addEventListener('click', imprimirHoja);
 
     $$('[data-cerrar-modal]').forEach(b => b.addEventListener('click', () => {
       b.closest('.modal').hidden = true;

@@ -165,10 +165,11 @@
   <div id="modalTicket" class="modal" hidden>
     <div class="modal-card ticket-modal">
       <div id="ticketRender" class="ticket"></div>
-      <div class="row" style="gap:10px;">
-        <button class="btn" data-cerrar-modal>Cerrar</button>
-        <button class="btn primary" id="btnImprimirNow">Imprimir</button>
+      <div class="row" style="gap:8px; flex-wrap:wrap;">
+        <button class="btn primary" id="btnImprimirBT" style="flex:1; min-width:140px;">📱 Bluetooth (RawBT)</button>
+        <button class="btn" id="btnImprimirHoja" style="flex:1; min-width:140px;">🖨️ Otra impresora</button>
       </div>
+      <button class="btn ghost" data-cerrar-modal style="margin-top:6px;">Cerrar</button>
     </div>
   </div>
 
