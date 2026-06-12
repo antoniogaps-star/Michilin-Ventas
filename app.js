@@ -2,10 +2,15 @@
 (() => {
   'use strict';
 
+  // Si localStorage está vacío, usa el catálogo empaquetado en catalogo.js
+  const _seed = window.CATALOGO_SEED || { productos: [], modeloramas: [] };
+  const _lsProd = JSON.parse(localStorage.getItem('cat_productos') || '[]');
+  const _lsMod = JSON.parse(localStorage.getItem('cat_modeloramas') || '[]');
+
   const state = {
     backendUrl: localStorage.getItem('backendUrl') || '',
-    productos: JSON.parse(localStorage.getItem('cat_productos') || '[]'),
-    modeloramas: JSON.parse(localStorage.getItem('cat_modeloramas') || '[]'),
+    productos: _lsProd.length ? _lsProd : _seed.productos,
+    modeloramas: _lsMod.length ? _lsMod : _seed.modeloramas,
     gastos: JSON.parse(localStorage.getItem('gastos_cache') || '[]'),
     pendientes: JSON.parse(localStorage.getItem('pendientes') || '[]'),
     venta: nuevaVenta(),
