@@ -177,6 +177,8 @@ textarea { resize: vertical; font-family: inherit; }
   display: flex; align-items: flex-end;
   z-index: 100;
 }
+.modal.modal-top { align-items: flex-start; }
+.modal.modal-top .modal-card { border-radius: 0 0 16px 16px; padding-top: calc(20px + env(safe-area-inset-top)); }
 .modal-card {
   background: #fff; width: 100%;
   border-radius: 16px 16px 0 0;

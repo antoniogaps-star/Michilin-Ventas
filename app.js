@@ -130,32 +130,42 @@
   function initVenta() {
     state.venta = nuevaVenta();
     $('#fechaVenta').value = state.venta.fecha;
-    $('#buscaModelorama').value = '';
     $('#modSel').hidden = true;
-    $('#resultModelorama').innerHTML = '';
     $('#notaVenta').value = '';
     renderCarrito();
     actualizarTotales();
+  }
+
+  function abrirSelectorModelorama() {
+    $('#modalModelorama').hidden = false;
+    $('#buscaModelorama').value = '';
+    renderListaModeloramas('');
+    setTimeout(() => $('#buscaModelorama').focus(), 100);
+  }
+
+  function renderListaModeloramas(filtro) {
+    const f = norm(filtro);
+    const cont = $('#listaModeloramas');
+    const items = (state.modeloramas || []).filter(m =>
+      !f || norm(m.nombre).includes(f) || String(m.numero).includes(f)
+    ).slice(0, 50);
+    cont.innerHTML = items.length
+      ? items.map(m => `<div class="prod-pick-item" data-num="${m.numero}">
+          <div>
+            <div class="nombre">${m.nombre}</div>
+            <div class="precio">#${m.numero}${m.ciudad ? ' · ' + m.ciudad : ''}</div>
+          </div>
+        </div>`).join('')
+      : '<p class="muted small">Sin resultados</p>';
   }
 
   function elegirModelorama(m) {
     state.venta.modelorama = m;
     $('#modSel').hidden = false;
     $('#modSel').innerHTML = `<strong>${m.nombre}</strong><small>#${m.numero}${m.ciudad ? ' · ' + m.ciudad : ''}</small>`;
-    $('#buscaModelorama').value = '';
-    $('#resultModelorama').innerHTML = '';
+    $('#modalModelorama').hidden = true;
     actualizarTotales();
-  }
-
-  function buscarModelorama(texto) {
-    const f = norm(texto);
-    if (!f || f.length < 2) { $('#resultModelorama').innerHTML = ''; return; }
-    const res = state.modeloramas.filter(m =>
-      norm(m.nombre).includes(f) || String(m.numero).includes(f)
-    ).slice(0, 8);
-    $('#resultModelorama').innerHTML = res.map(m =>
-      `<li data-num="${m.numero}"><strong>${m.nombre}</strong><small>#${m.numero}${m.ciudad ? ' · ' + m.ciudad : ''}</small></li>`
-    ).join('');
+    toast('✓ ' + m.nombre, 'ok');
   }
 
   function abrirSelectorProductos() {
@@ -661,10 +671,11 @@
 
     // Venta
     $('#fechaVenta').addEventListener('change', e => state.venta.fecha = e.target.value || hoy());
-    $('#buscaModelorama').addEventListener('input', e => buscarModelorama(e.target.value));
-    $('#resultModelorama').addEventListener('click', e => {
-      const li = e.target.closest('li'); if (!li) return;
-      const m = state.modeloramas.find(x => String(x.numero) === li.dataset.num);
+    $('#btnElegirModelorama').addEventListener('click', abrirSelectorModelorama);
+    $('#buscaModelorama').addEventListener('input', e => renderListaModeloramas(e.target.value));
+    $('#listaModeloramas').addEventListener('click', e => {
+      const it = e.target.closest('.prod-pick-item'); if (!it) return;
+      const m = state.modeloramas.find(x => String(x.numero) === it.dataset.num);
       if (m) elegirModelorama(m);
     });
     $('#btnAbrirProductos').addEventListener('click', abrirSelectorProductos);
