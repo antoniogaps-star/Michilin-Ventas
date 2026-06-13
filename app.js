@@ -409,8 +409,7 @@
     txt = txt.normalize('NFD').replace(/[̀-ͯ]/g, '');
     txt = txt + '\n\n\n\n';
     try {
-      const b64 = btoa(txt);
-      const url = 'rawbt:' + b64;
+      const url = 'rawbt:' + encodeURIComponent(txt);
       const a = document.createElement('a');
       a.href = url;
       a.target = '_blank';
