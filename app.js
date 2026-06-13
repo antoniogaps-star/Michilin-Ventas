@@ -406,11 +406,14 @@
 
   function imprimirBluetooth() {
     let txt = $('#ticketRender').textContent;
-    // Normalizar a ASCII puro para compatibilidad con impresoras térmicas
     txt = txt.normalize('NFD').replace(/[̀-ͯ]/g, '');
     try {
-      const b64 = btoa(txt);
-      window.location.href = 'rawbt:text/plain,' + b64;
+      const ESC = '\x1B', GS = '\x1D';
+      const init = ESC + '@';
+      const cut = '\n\n\n' + GS + 'V' + '\x00';
+      const data = init + txt + cut;
+      const b64 = btoa(data);
+      window.location.href = 'rawbt:' + b64;
     } catch (e) {
       toast('No se pudo abrir RawBT. ¿Está instalada?', 'error');
     }
