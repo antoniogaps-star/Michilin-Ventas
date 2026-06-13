@@ -410,7 +410,14 @@
     txt = txt + '\n\n\n\n';
     try {
       const b64 = btoa(txt);
-      window.location.href = 'rawbt:' + b64;
+      const url = 'rawbt:' + b64;
+      const a = document.createElement('a');
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { try { document.body.removeChild(a); } catch (e) {} }, 100);
     } catch (e) {
       toast('No se pudo abrir RawBT. ¿Está instalada?', 'error');
     }
