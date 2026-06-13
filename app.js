@@ -405,10 +405,12 @@
   }
 
   function imprimirBluetooth() {
-    const txt = $('#ticketRender').textContent;
+    let txt = $('#ticketRender').textContent;
+    // Normalizar a ASCII puro para compatibilidad con impresoras térmicas
+    txt = txt.normalize('NFD').replace(/[̀-ͯ]/g, '');
     try {
-      const b64 = btoa(unescape(encodeURIComponent(txt)));
-      window.location.href = 'rawbt:' + b64;
+      const b64 = btoa(txt);
+      window.location.href = 'rawbt:text/plain,' + b64;
     } catch (e) {
       toast('No se pudo abrir RawBT. ¿Está instalada?', 'error');
     }
