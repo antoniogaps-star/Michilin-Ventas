@@ -326,9 +326,21 @@
   function payloadVenta() {
     const items = Object.values(state.venta.items);
     const { subtotal, desc, total } = calcularTotales();
+    if (!state.venta.hora) {
+      const d = new Date();
+      state.venta.hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+    if (!state.venta.visita) {
+      const key = 'visitas_' + state.venta.fecha;
+      const n = (Number(localStorage.getItem(key)) || 0) + 1;
+      localStorage.setItem(key, n);
+      state.venta.visita = n;
+    }
     return {
       accion: 'venta',
       fecha: state.venta.fecha,
+      hora: state.venta.hora,
+      visita: state.venta.visita,
       modelorama_num: state.venta.modelorama.numero,
       modelorama_nombre: state.venta.modelorama.nombre,
       items: items.map(it => ({ producto: it.producto, cantidad: it.cantidad, precio_unit: it.precio_unit })),
@@ -370,7 +382,8 @@
     t += center('MICHILIN') + '\n';
     t += center('Productos artesanales') + '\n';
     t += linea + '\n';
-    t += 'Fecha: ' + p.fecha + '\n';
+    t += lr('Fecha: ' + p.fecha, p.hora ? p.hora : '') + '\n';
+    if (p.visita) t += 'Visita #' + p.visita + ' del dia\n';
     t += 'Cliente: ' + p.modelorama_nombre + '\n';
     t += '#' + p.modelorama_num + '\n';
     t += linea + '\n';
