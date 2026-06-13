@@ -407,12 +407,9 @@
   function imprimirBluetooth() {
     let txt = $('#ticketRender').textContent;
     txt = txt.normalize('NFD').replace(/[̀-ͯ]/g, '');
+    txt = txt + '\n\n\n\n';
     try {
-      const ESC = '\x1B', GS = '\x1D';
-      const init = ESC + '@';
-      const cut = '\n\n\n' + GS + 'V' + '\x00';
-      const data = init + txt + cut;
-      const b64 = btoa(data);
+      const b64 = btoa(txt);
       window.location.href = 'rawbt:' + b64;
     } catch (e) {
       toast('No se pudo abrir RawBT. ¿Está instalada?', 'error');
