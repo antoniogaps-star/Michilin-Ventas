@@ -407,8 +407,8 @@
   function imprimirBluetooth() {
     const txt = $('#ticketRender').textContent;
     try {
-      const enc = encodeURIComponent(txt);
-      window.location.href = `rawbt:${enc}`;
+      const b64 = btoa(unescape(encodeURIComponent(txt)));
+      window.location.href = 'rawbt:' + b64;
     } catch (e) {
       toast('No se pudo abrir RawBT. ¿Está instalada?', 'error');
     }
