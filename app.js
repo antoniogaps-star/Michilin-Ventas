@@ -405,9 +405,40 @@
     return t;
   }
 
+  function renderTicketCarrito() {
+    const items = Object.values(state.venta.items);
+    const body = $('#ticketCarritoBody');
+    if (!body) return;
+    if (!items.length) {
+      body.innerHTML = '<tr><td colspan="4" class="muted" style="text-align:center;">Sin productos</td></tr>';
+      return;
+    }
+    body.innerHTML = items.map(it => `
+      <tr data-fila="${it.fila}">
+        <td class="prod">${it.producto}</td>
+        <td><input type="number" inputmode="numeric" min="0" data-k="cantidad" value="${it.cantidad}" style="width:60px;" /></td>
+        <td class="col-total">${fmt(it.cantidad * it.precio_unit)}</td>
+        <td><button class="btn-del" data-quitar="${it.fila}">×</button></td>
+      </tr>
+    `).join('');
+  }
+
+  function refrescarTicketPreview() {
+    if (!Object.keys(state.venta.items).length) {
+      $('#modalTicket').hidden = true;
+      return;
+    }
+    const payload = payloadVenta();
+    $('#ticketRender').textContent = generarTicketTexto(payload);
+    renderTicketCarrito();
+    renderCarrito();
+    actualizarTotales();
+  }
+
   function mostrarTicket(payload) {
     const txt = generarTicketTexto(payload);
     $('#ticketRender').textContent = txt;
+    renderTicketCarrito();
     $('#modalTicket').hidden = false;
   }
 
@@ -745,6 +776,22 @@
     $('#btnGuardar').addEventListener('click', guardarVenta);
     $('#btnImprimirBT').addEventListener('click', imprimirBluetooth);
     $('#btnImprimirHoja').addEventListener('click', imprimirHoja);
+
+    // Edicion de cantidades dentro del ticket
+    $('#ticketCarritoBody').addEventListener('change', e => {
+      if (e.target.matches('input')) {
+        const fila = Number(e.target.closest('tr').dataset.fila);
+        actualizarItem(fila, e.target.dataset.k, e.target.value);
+        refrescarTicketPreview();
+      }
+    });
+    $('#ticketCarritoBody').addEventListener('click', e => {
+      const b = e.target.closest('[data-quitar]');
+      if (b) {
+        quitarItem(Number(b.dataset.quitar));
+        refrescarTicketPreview();
+      }
+    });
 
     $$('[data-cerrar-modal]').forEach(b => b.addEventListener('click', () => {
       b.closest('.modal').hidden = true;

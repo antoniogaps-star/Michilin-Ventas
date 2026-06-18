@@ -164,6 +164,14 @@
   <!-- Modal: ticket impreso -->
   <div id="modalTicket" class="modal" hidden>
     <div class="modal-card ticket-modal">
+      <h3 style="margin:0 0 4px;">Revisa tu venta</h3>
+      <p class="muted small" style="margin:0 0 10px;">Ajusta cantidades antes de imprimir. Cambios aquí se aplican al ticket.</p>
+      <table class="cart-table" style="margin-bottom:12px;">
+        <thead>
+          <tr><th>Producto</th><th>Cant.</th><th>Total</th><th></th></tr>
+        </thead>
+        <tbody id="ticketCarritoBody"></tbody>
+      </table>
       <div id="ticketRender" class="ticket"></div>
       <div class="row" style="gap:8px; flex-wrap:wrap;">
         <button class="btn primary" id="btnImprimirBT" style="flex:1; min-width:140px;">📱 Bluetooth (RawBT)</button>
