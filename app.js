@@ -2,13 +2,16 @@
 (() => {
   'use strict';
 
+  // URL del backend por defecto (se usa si el usuario no ha configurado otra)
+  const DEFAULT_BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxwK0TeXdWBbJ9tkgaoT9OBjq5E-OgDi392RDVnP8zqKEGUIsKlf4xp0VW-Jl845HKD/exec';
+
   // Si localStorage está vacío, usa el catálogo empaquetado en catalogo.js
   const _seed = window.CATALOGO_SEED || { productos: [], modeloramas: [] };
   const _lsProd = JSON.parse(localStorage.getItem('cat_productos') || '[]');
   const _lsMod = JSON.parse(localStorage.getItem('cat_modeloramas') || '[]');
 
   const state = {
-    backendUrl: localStorage.getItem('backendUrl') || '',
+    backendUrl: localStorage.getItem('backendUrl') || DEFAULT_BACKEND_URL,
     productos: _lsProd.length ? _lsProd : _seed.productos,
     modeloramas: _lsMod.length ? _lsMod : _seed.modeloramas,
     gastos: JSON.parse(localStorage.getItem('gastos_cache') || '[]'),
@@ -855,6 +858,15 @@
     if (ci) ci.textContent = `${state.productos.length} productos · ${state.modeloramas.length} modeloramas`;
     ir('home', false);
     setTimeout(sincronizar, 1000);
+    // Auto-descargar catalogo completo si solo tenemos la semilla (152) o nada
+    if (state.modeloramas.length < 500 && state.backendUrl && navigator.onLine) {
+      setTimeout(async () => {
+        try {
+          const ok = await cargarCatalogosRemoto();
+          if (ok) toast(`✓ Catálogo actualizado: ${state.modeloramas.length} modeloramas`, 'ok');
+        } catch (e) {}
+      }, 1500);
+    }
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(() => {});
   }
   document.addEventListener('DOMContentLoaded', init);
