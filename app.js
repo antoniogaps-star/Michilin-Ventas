@@ -17,9 +17,14 @@
     gastos: JSON.parse(localStorage.getItem('gastos_cache') || '[]'),
     pendientes: JSON.parse(localStorage.getItem('pendientes') || '[]'),
     venta: nuevaVenta(),
+    visita: nuevaVisita(),
     pantalla: 'home',
     historial: []  // navegación atrás
   };
+
+  function nuevaVisita() {
+    return { fecha: hoy(), modelorama: null, motivo: '', motivoOtro: '', nota: '' };
+  }
 
   function nuevaVenta() {
     return {
@@ -67,7 +72,7 @@
     $$('.screen').forEach(s => s.classList.toggle('active', s.dataset.screen === pantalla));
     $('#btnBack').hidden = state.historial.length === 0;
     const titulos = {
-      home: 'Michilin', venta: 'Nueva venta',
+      home: 'Michilin', venta: 'Nueva venta', visita: 'Visita sin venta',
       inventario: 'Inventario inicial', historial: 'Ventas del día',
       config: 'Configuración', productos: 'Productos',
       reimpresion: 'Reimprimir tickets', informes: 'Informes',
@@ -75,6 +80,7 @@
     };
     $('#titulo').textContent = titulos[pantalla] || 'Michilin';
     if (pantalla === 'venta') initVenta();
+    if (pantalla === 'visita') initVisita();
     if (pantalla === 'inventario') cargarInventario();
     if (pantalla === 'historial') cargarHistorial();
     if (pantalla === 'productos') renderProductosConfig();
@@ -469,6 +475,83 @@
     }
   }
   function imprimirHoja() { window.print(); }
+
+  // ===== Visita sin venta =====
+  function initVisita() {
+    state.visita = nuevaVisita();
+    $('#fechaVisita').value = state.visita.fecha;
+    $('#modSelVis').hidden = true;
+    $('#motivoOtroTxt').hidden = true; $('#motivoOtroTxt').value = '';
+    $('#notaVisita').value = '';
+    $$('.btn-motivo').forEach(b => b.classList.remove('selected'));
+    actualizarBotonVisita();
+  }
+
+  function elegirModeloramaVisita(m) {
+    state.visita.modelorama = m;
+    $('#modSelVis').hidden = false;
+    $('#modSelVis').innerHTML = `<strong>${m.nombre}</strong><small>#${m.numero}${m.ciudad ? ' · ' + m.ciudad : ''}</small>`;
+    $('#modalModelorama').hidden = true;
+    actualizarBotonVisita();
+    toast('✓ ' + m.nombre, 'ok');
+  }
+
+  function seleccionarMotivo(btn) {
+    $$('.btn-motivo').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    state.visita.motivo = btn.dataset.motivo;
+    const esOtro = state.visita.motivo === 'OTRO';
+    $('#motivoOtroTxt').hidden = !esOtro;
+    if (esOtro) setTimeout(() => $('#motivoOtroTxt').focus(), 100);
+    actualizarBotonVisita();
+  }
+
+  function actualizarBotonVisita() {
+    const sinMod = !state.visita.modelorama;
+    const sinMotivo = !state.visita.motivo;
+    const otroVacio = state.visita.motivo === 'OTRO' && !$('#motivoOtroTxt').value.trim();
+    const valido = !sinMod && !sinMotivo && !otroVacio;
+    $('#btnGuardarVisita').disabled = !valido;
+    const msg = $('#msgFaltaVis');
+    if (sinMod) { msg.textContent = '⚠ Falta seleccionar modelorama'; msg.hidden = false; }
+    else if (sinMotivo) { msg.textContent = '⚠ Falta seleccionar motivo'; msg.hidden = false; }
+    else if (otroVacio) { msg.textContent = '⚠ Especifica el motivo'; msg.hidden = false; }
+    else { msg.hidden = true; }
+  }
+
+  async function guardarVisita() {
+    if (!state.visita.modelorama || !state.visita.motivo) return;
+    const motivoFinal = state.visita.motivo === 'OTRO'
+      ? ($('#motivoOtroTxt').value.trim().toUpperCase() || 'OTRO')
+      : state.visita.motivo;
+    const d = new Date();
+    const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const payload = {
+      accion: 'visita_sin_venta',
+      fecha: state.visita.fecha,
+      hora,
+      modelorama_num: state.visita.modelorama.numero,
+      modelorama_nombre: state.visita.modelorama.nombre,
+      motivo: motivoFinal,
+      nota: $('#notaVisita').value.trim(),
+      _id: 'vis_' + Date.now() + '_' + Math.random().toString(36).slice(2,7)
+    };
+    let enviado = false;
+    if (navigator.onLine && state.backendUrl) {
+      try {
+        const r = await api(null, payload);
+        if (r.ok) enviado = true;
+        else toast('Error: ' + (r.error || ''), 'error');
+      } catch (e) {}
+    }
+    if (!enviado) {
+      state.pendientes.push(payload);
+      guardarLS('pendientes', state.pendientes);
+    }
+    setEstadoSync();
+    toast(enviado ? '✓ Visita guardada' : '✓ Guardada (pendiente)', 'ok');
+    ir('home');
+  }
 
   // ===== Captura por voz =====
   const NUM_PALABRAS = {
@@ -998,7 +1081,9 @@
     $('#listaModeloramas').addEventListener('click', e => {
       const it = e.target.closest('.prod-pick-item'); if (!it) return;
       const m = state.modeloramas.find(x => String(x.numero) === it.dataset.num);
-      if (m) elegirModelorama(m);
+      if (!m) return;
+      if (state._visitaSelMod) { state._visitaSelMod = false; elegirModeloramaVisita(m); }
+      else elegirModelorama(m);
     });
     $('#btnUsarNuevoMod').addEventListener('click', usarNuevoModelorama);
     $('#btnAbrirProductos').addEventListener('click', abrirSelectorProductos);
@@ -1052,6 +1137,16 @@
     $$('[data-cerrar-modal]').forEach(b => b.addEventListener('click', () => {
       b.closest('.modal').hidden = true;
     }));
+
+    // Visita sin venta
+    $('#fechaVisita').addEventListener('change', e => state.visita.fecha = e.target.value || hoy());
+    $('#btnElegirModeloramaVis').addEventListener('click', () => {
+      state._visitaSelMod = true;
+      abrirSelectorModelorama();
+    });
+    $$('.btn-motivo').forEach(b => b.addEventListener('click', () => seleccionarMotivo(b)));
+    $('#motivoOtroTxt').addEventListener('input', actualizarBotonVisita);
+    $('#btnGuardarVisita').addEventListener('click', guardarVisita);
 
     // Inventario
     $('#btnGuardarInv').addEventListener('click', guardarInventarioInicial);

@@ -27,6 +27,7 @@
       <p id="fechaHoy" class="muted"></p>
     </div>
     <button class="btn primary big" data-go="venta">+ Nueva venta</button>
+    <button class="btn" data-go="visita">🚫 Visita sin venta</button>
     <button class="btn" data-go="historial">📋 Ventas del día</button>
     <button class="btn ghost" data-go="config">⚙️ Configuración</button>
     <div id="resumenDia" class="card"></div>
@@ -213,6 +214,36 @@
       <button class="btn ghost" data-cerrar-modal style="margin-top:6px;">Cerrar</button>
     </div>
   </div>
+
+  <!-- Pantalla: Visita sin venta -->
+  <section data-screen="visita" class="screen">
+    <div class="card">
+      <label>Fecha</label>
+      <input type="date" id="fechaVisita" />
+    </div>
+    <div class="card">
+      <label>Modelorama</label>
+      <button type="button" id="btnElegirModeloramaVis" class="btn" style="text-align:center; margin:0;">
+        🏪 Tocar para elegir modelorama
+      </button>
+      <div id="modSelVis" class="selBox" hidden></div>
+    </div>
+    <div class="card">
+      <label>Motivo</label>
+      <div class="motivos-grid">
+        <button type="button" class="btn-motivo" data-motivo="TIENE MICHILIN">🍯 Tiene Michilin</button>
+        <button type="button" class="btn-motivo" data-motivo="COMPETENCIA">🏁 Competencia</button>
+        <button type="button" class="btn-motivo" data-motivo="CERRADO">🔒 Cerrado</button>
+        <button type="button" class="btn-motivo" data-motivo="NO QUISO">🚫 No quiso</button>
+        <button type="button" class="btn-motivo" data-motivo="SIN DINERO">💸 Sin dinero</button>
+        <button type="button" class="btn-motivo" data-motivo="OTRO">✏️ Otro</button>
+      </div>
+      <input type="text" id="motivoOtroTxt" placeholder="Especifica el motivo…" style="margin-top:8px;" hidden />
+      <input type="text" id="notaVisita" placeholder="Nota (opcional)…" style="margin-top:8px;" />
+    </div>
+    <p id="msgFaltaVis" class="muted small" style="text-align:center; margin:8px 0; color:var(--warn); font-weight:500;" hidden></p>
+    <button id="btnGuardarVisita" class="btn primary big" disabled>💾 Guardar visita</button>
+  </section>
 
   <!-- Pantalla: Inventario -->
   <section data-screen="inventario" class="screen">

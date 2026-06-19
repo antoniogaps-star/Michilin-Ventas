@@ -295,3 +295,17 @@ textarea { resize: vertical; font-family: inherit; }
   font-style: italic;
 }
 .voz-transcript:not([hidden]) ~ .voz-transcript { margin-top: 6px; }
+
+/* === Visita sin venta - Motivos === */
+.motivos-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+}
+.btn-motivo {
+  padding: 14px 8px; border-radius: 12px; border: 2px solid var(--border);
+  background: white; color: #333; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.btn-motivo:active { transform: scale(.97); }
+.btn-motivo.selected {
+  border-color: var(--primary); background: #fff0ed; color: var(--primary);
+}
