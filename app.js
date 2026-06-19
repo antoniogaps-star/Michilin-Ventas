@@ -468,6 +468,10 @@
   function imprimirBluetooth() {
     let txt = $('#ticketRender').textContent;
     txt = txt.normalize('NFD').replace(/[̀-ͯ]/g, '');
+    // ESC ! 0x30 = doble alto + doble ancho, ESC ! 0x00 = normal
+    // Aplicamos solo al renglon "TOTAL: $..." y lo recortamos para que quepa al doble
+    txt = txt.replace(/^TOTAL:\s+(\$[\d,.]+)\s*$/m,
+      '\x1B!\x30TOTAL: $1\x1B!\x00');
     txt = txt + '\n\n\n\n';
     try {
       const url = 'rawbt:' + encodeURIComponent(txt);
