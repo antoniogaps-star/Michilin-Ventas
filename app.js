@@ -42,7 +42,15 @@
   const $ = (s, ctx = document) => ctx.querySelector(s);
   const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
   const fmt = n => '$' + (Number(n) || 0).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-  function hoy() { const d = new Date(); return d.toISOString().slice(0, 10); }
+  function hoy() {
+    // Usa zona horaria local (no UTC) — toISOString daba la fecha del dia siguiente
+    // para ventas capturadas despues de las 6pm en Mexico.
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
   const guardarLS = (k, v) => localStorage.setItem(k, JSON.stringify(v));
   const norm = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
