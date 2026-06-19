@@ -264,3 +264,34 @@ textarea { resize: vertical; font-family: inherit; }
     border: 0; padding: 0; font-size: 11px;
   }
 }
+
+/* === Captura por voz === */
+.voz-card { background: #fff7f4; border: 1px solid #ffe0d6; }
+.mic-btn {
+  width: 100%; padding: 18px; border-radius: 14px;
+  background: linear-gradient(135deg, #d62828, #b81d1d); color: white;
+  border: none; font-size: 16px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  cursor: pointer; transition: transform .15s, box-shadow .15s;
+  box-shadow: 0 4px 12px rgba(214,40,40,.3);
+}
+.mic-btn:active { transform: scale(.97); }
+.mic-btn .mic-icon { font-size: 28px; }
+.mic-btn.listening {
+  background: linear-gradient(135deg, #2a9d8f, #1f7a6f);
+  animation: pulseMic 1.2s ease-in-out infinite;
+  box-shadow: 0 0 0 0 rgba(42,157,143,.6);
+}
+@keyframes pulseMic {
+  0% { box-shadow: 0 0 0 0 rgba(42,157,143,.6); }
+  70% { box-shadow: 0 0 0 18px rgba(42,157,143,0); }
+  100% { box-shadow: 0 0 0 0 rgba(42,157,143,0); }
+}
+.voz-transcript {
+  margin-top: 10px; padding: 10px 12px;
+  background: white; border: 1px solid var(--border);
+  border-radius: 10px; font-size: 14px; color: #333;
+  min-height: 40px; max-height: 140px; overflow-y: auto;
+  font-style: italic;
+}
+.voz-transcript:not([hidden]) ~ .voz-transcript { margin-top: 6px; }

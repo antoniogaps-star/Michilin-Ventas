@@ -470,6 +470,253 @@
   }
   function imprimirHoja() { window.print(); }
 
+  // ===== Captura por voz =====
+  const NUM_PALABRAS = {
+    'cero': 0, 'un': 1, 'uno': 1, 'una': 1, 'dos': 2, 'tres': 3, 'cuatro': 4, 'cinco': 5,
+    'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9, 'diez': 10, 'once': 11, 'doce': 12,
+    'trece': 13, 'catorce': 14, 'quince': 15, 'dieciseis': 16, 'diecisiete': 17,
+    'dieciocho': 18, 'diecinueve': 19, 'veinte': 20, 'veintiuno': 21, 'veintidos': 22,
+    'veintitres': 23, 'veinticuatro': 24, 'veinticinco': 25, 'veintiseis': 26,
+    'veintisiete': 27, 'veintiocho': 28, 'veintinueve': 29, 'treinta': 30,
+    'cuarenta': 40, 'cincuenta': 50
+  };
+  const PALABRAS_COMANDO = {
+    imprimir: ['imprime', 'imprimir', 'imprima', 'imprime ticket', 'imprimir ticket'],
+    guardar: ['guarda', 'guardar', 'guarda venta', 'guardar venta'],
+    limpiar: ['limpia', 'limpia carrito', 'borra todo', 'cancela', 'cancelar', 'limpiar carrito'],
+    quitar: ['quita', 'quitar', 'borra', 'borrar', 'elimina', 'eliminar'],
+  };
+  const PALABRAS_CLIENTE = ['modelorama', 'cliente', 'mod'];
+
+  function normVoz(s) {
+    return (s || '').toString().toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  function parseNumero(tok) {
+    if (/^\d+$/.test(tok)) return parseInt(tok, 10);
+    return NUM_PALABRAS[tok] ?? null;
+  }
+
+  function esComando(tok) {
+    for (const k of Object.keys(PALABRAS_COMANDO)) {
+      if (PALABRAS_COMANDO[k].includes(tok)) return k;
+    }
+    return null;
+  }
+
+  function buscarProducto(query) {
+    const q = normVoz(query);
+    if (!q) return null;
+    const qTokens = q.split(' ');
+    let best = null, bestScore = 0;
+    for (const p of state.productos) {
+      const pn = normVoz(p.nombre);
+      const pTokens = pn.split(' ').filter(t => t.length > 1);
+      let score = 0;
+      for (const t of qTokens) {
+        if (t.length < 2) continue;
+        if (pTokens.includes(t)) score += 3;
+        else if (pTokens.some(pt => pt.startsWith(t) && t.length >= 3)) score += 2;
+        else if (pTokens.some(pt => t.startsWith(pt) && pt.length >= 3)) score += 1;
+      }
+      if (score > bestScore) { bestScore = score; best = p; }
+    }
+    return bestScore >= 2 ? best : null;
+  }
+
+  function buscarModelorama(query) {
+    const q = normVoz(query);
+    if (!q) return null;
+    const qTokens = q.split(' ').filter(t => t.length >= 3);
+    if (!qTokens.length) return null;
+    const PREFIX = ['np', 'modelorama', 'mod', 'pm', 'pmod'];
+    let best = null, bestScore = 0;
+    for (const m of state.modeloramas) {
+      const mn = normVoz(m.nombre);
+      const mTokens = mn.split(' ').filter(t => t.length > 1 && !PREFIX.includes(t));
+      let score = 0;
+      for (const t of qTokens) {
+        if (mTokens.includes(t)) score += 3;
+        else if (mTokens.some(mt => mt.startsWith(t) || t.startsWith(mt))) score += 1;
+      }
+      if (String(m.numero) === q.replace(/\s/g,'')) { best = m; bestScore = 999; break; }
+      if (score > bestScore) { bestScore = score; best = m; }
+    }
+    return bestScore >= 3 ? best : null;
+  }
+
+  function vozMostrarEstado(msg, tipo) {
+    const e = $('#vozEstado');
+    if (!e) return;
+    e.textContent = msg || '';
+    e.style.color = tipo === 'error' ? 'var(--primary)' : tipo === 'ok' ? '#2a9d8f' : '';
+  }
+  function vozMostrarTranscript(txt) {
+    const e = $('#vozTranscript');
+    if (!e) return;
+    if (!txt) { e.hidden = true; e.textContent = ''; return; }
+    e.hidden = false;
+    e.textContent = '« ' + txt + ' »';
+  }
+
+  function ejecutarComandoVoz(cmd, arg) {
+    if (cmd === 'imprimir') {
+      if (!state.venta.modelorama || !Object.keys(state.venta.items).length) {
+        toast('Falta modelorama o productos', 'error'); return;
+      }
+      imprimirTicket();
+      return;
+    }
+    if (cmd === 'guardar') {
+      if (!state.venta.modelorama || !Object.keys(state.venta.items).length) {
+        toast('Falta modelorama o productos', 'error'); return;
+      }
+      guardarVenta();
+      return;
+    }
+    if (cmd === 'limpiar') {
+      state.venta.items = {};
+      renderCarrito(); actualizarTotales();
+      toast('Carrito vacío', 'ok');
+      return;
+    }
+    if (cmd === 'quitar' && arg) {
+      const p = buscarProducto(arg);
+      if (p && state.venta.items[p.fila]) {
+        quitarItem(p.fila);
+        toast('Quitado: ' + p.nombre, 'ok');
+      } else {
+        toast('No encontrado: ' + arg, 'error');
+      }
+      return;
+    }
+  }
+
+  function procesarTranscripcion(texto) {
+    const norm = normVoz(texto);
+    if (!norm) return;
+    vozMostrarTranscript(texto);
+    const tokens = norm.split(' ');
+    const resultados = { productos: [], modelorama: null, comando: null };
+    let i = 0;
+    while (i < tokens.length) {
+      const t = tokens[i];
+      const cmd = esComando(t) || (i+1 < tokens.length ? esComando(t + ' ' + tokens[i+1]) : null);
+      if (cmd) {
+        if (cmd === 'quitar') {
+          let j = i + 1, nameTok = [];
+          while (j < tokens.length && parseNumero(tokens[j]) === null && !esComando(tokens[j]) && !PALABRAS_CLIENTE.includes(tokens[j])) {
+            nameTok.push(tokens[j]); j++;
+          }
+          ejecutarComandoVoz('quitar', nameTok.join(' '));
+          i = j; continue;
+        }
+        resultados.comando = cmd;
+        i++; continue;
+      }
+      if (PALABRAS_CLIENTE.includes(t)) {
+        let j = i + 1, nameTok = [];
+        while (j < tokens.length && parseNumero(tokens[j]) === null && !esComando(tokens[j]) && !PALABRAS_CLIENTE.includes(tokens[j])) {
+          nameTok.push(tokens[j]); j++;
+        }
+        const m = buscarModelorama(nameTok.join(' '));
+        if (m) {
+          elegirModelorama(m);
+          resultados.modelorama = m;
+        } else {
+          toast('Modelorama no encontrado: ' + nameTok.join(' '), 'error');
+        }
+        i = j; continue;
+      }
+      const num = parseNumero(t);
+      if (num !== null) {
+        let j = i + 1, nameTok = [];
+        while (j < tokens.length && parseNumero(tokens[j]) === null && !esComando(tokens[j]) && !PALABRAS_CLIENTE.includes(tokens[j])) {
+          nameTok.push(tokens[j]); j++;
+        }
+        if (nameTok.length) {
+          const p = buscarProducto(nameTok.join(' '));
+          if (p) {
+            state.venta.items[p.fila] = {
+              producto: p.nombre, cantidad: num, precio_unit: p.precio, fila: p.fila
+            };
+            resultados.productos.push({ p, cant: num });
+          } else {
+            toast('Producto no entendido: ' + nameTok.join(' '), 'error');
+          }
+        }
+        i = j; continue;
+      }
+      i++;
+    }
+    renderCarrito();
+    actualizarTotales();
+    if (resultados.productos.length) {
+      const resumen = resultados.productos.map(r => `${r.cant}×${r.p.nombre}`).join(', ');
+      vozMostrarEstado('✓ ' + resumen, 'ok');
+    }
+    if (resultados.comando && resultados.comando !== 'quitar') {
+      ejecutarComandoVoz(resultados.comando);
+    }
+  }
+
+  let reconocedor = null, escuchando = false;
+  function initReconocedor() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const r = new SR();
+    r.lang = 'es-MX';
+    r.continuous = false;
+    r.interimResults = true;
+    r.maxAlternatives = 1;
+    let finalText = '';
+    r.onstart = () => {
+      escuchando = true; finalText = '';
+      $('#btnMicrofono').classList.add('listening');
+      $('#btnMicrofono').querySelector('.mic-label').textContent = 'Escuchando… toca para terminar';
+      vozMostrarEstado('Habla ahora…');
+      vozMostrarTranscript('');
+    };
+    r.onresult = e => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) finalText += res[0].transcript + ' ';
+        else interim += res[0].transcript;
+      }
+      vozMostrarTranscript((finalText + interim).trim());
+    };
+    r.onerror = e => {
+      vozMostrarEstado('Error: ' + e.error, 'error');
+    };
+    r.onend = () => {
+      escuchando = false;
+      $('#btnMicrofono').classList.remove('listening');
+      $('#btnMicrofono').querySelector('.mic-label').textContent = 'Toca y dicta el pedido';
+      if (finalText.trim()) {
+        procesarTranscripcion(finalText.trim());
+      } else {
+        vozMostrarEstado('No se escuchó nada', 'error');
+      }
+    };
+    return r;
+  }
+
+  function toggleMicrofono() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      toast('Tu navegador no soporta reconocimiento de voz', 'error');
+      vozMostrarEstado('No disponible en este navegador', 'error');
+      return;
+    }
+    if (!reconocedor) reconocedor = initReconocedor();
+    if (escuchando) { try { reconocedor.stop(); } catch(e) {} }
+    else { try { reconocedor.start(); } catch(e) { vozMostrarEstado('No se pudo iniciar', 'error'); } }
+  }
+
   // ===== Inventario =====
   function cargarInventario() {
     $('#fechaInv').value = hoy();
@@ -779,6 +1026,12 @@
     $('#btnGuardar').addEventListener('click', guardarVenta);
     $('#btnImprimirBT').addEventListener('click', imprimirBluetooth);
     $('#btnImprimirHoja').addEventListener('click', imprimirHoja);
+
+    // Microfono y ayuda
+    const btnMic = $('#btnMicrofono');
+    if (btnMic) btnMic.addEventListener('click', toggleMicrofono);
+    const btnAyV = $('#btnAyudaVoz');
+    if (btnAyV) btnAyV.addEventListener('click', () => { $('#modalAyudaVoz').hidden = false; });
 
     // Edicion de cantidades dentro del ticket
     $('#ticketCarritoBody').addEventListener('change', e => {

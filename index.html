@@ -100,7 +100,40 @@
         <span>💾</span><small>Guardar venta</small>
       </button>
     </div>
+
+    <!-- 6. Captura por voz -->
+    <div class="card voz-card">
+      <div class="row between" style="margin-bottom:6px;">
+        <label style="margin:0;">🎤 Captura por voz</label>
+        <button class="link" id="btnAyudaVoz" type="button">?</button>
+      </div>
+      <button id="btnMicrofono" type="button" class="mic-btn">
+        <span class="mic-icon">🎤</span>
+        <span class="mic-label">Toca y dicta el pedido</span>
+      </button>
+      <div id="vozEstado" class="muted small" style="margin-top:8px; text-align:center; min-height:18px;"></div>
+      <div id="vozTranscript" class="voz-transcript" hidden></div>
+    </div>
   </section>
+
+  <!-- Modal: ayuda de voz -->
+  <div id="modalAyudaVoz" class="modal" hidden>
+    <div class="modal-card">
+      <h3>Cómo usar la captura por voz</h3>
+      <p class="small">Toca el botón 🎤 y dicta el pedido. Ejemplos:</p>
+      <ul class="small" style="padding-left:18px; line-height:1.6;">
+        <li><strong>"modelorama berlín"</strong> — elige el cliente</li>
+        <li><strong>"tres mango cuarto, dos tamarindo medio"</strong> — agrega productos (cantidad + producto)</li>
+        <li><strong>"cinco ajonjoli"</strong> — agrega 5 ajonjolí</li>
+        <li><strong>"quita mango cuarto"</strong> — elimina ese producto</li>
+        <li><strong>"limpia carrito"</strong> — vacía el carrito</li>
+        <li><strong>"imprime ticket"</strong> — abre el ticket para imprimir</li>
+        <li><strong>"guarda venta"</strong> — guarda la venta</li>
+      </ul>
+      <p class="small muted">Puedes dictar todo de una sola vez: <em>"modelorama berlín tres mango cuarto dos ajonjoli imprime ticket"</em></p>
+      <button class="btn" data-cerrar-modal style="width:100%;">Entendido</button>
+    </div>
+  </div>
 
   <!-- Modal: selector de modelorama -->
   <div id="modalModelorama" class="modal" hidden>
