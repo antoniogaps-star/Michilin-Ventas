@@ -4,7 +4,7 @@
   "description": "Captura de ventas Michilin con sincronización a Google Sheets",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f5f5f7",
+  "background_color": "#f7d924",
   "theme_color": "#d62828",
   "orientation": "portrait",
   "lang": "es-MX",
