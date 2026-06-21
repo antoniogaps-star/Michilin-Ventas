@@ -819,8 +819,7 @@
 
   function procesarTranscripcion(texto) {
     const norm = normVoz(texto);
-    if (!norm) return;
-    vozMostrarTranscript(texto);
+    if (!norm) return null;
     const tokens = norm.split(' ');
     const resultados = { productos: [], modelorama: null, comando: null };
     let i = 0;
@@ -883,44 +882,60 @@
     if (resultados.comando && resultados.comando !== 'quitar') {
       ejecutarComandoVoz(resultados.comando);
     }
+    return resultados.comando;
   }
 
-  let reconocedor = null, escuchando = false;
+  let reconocedor = null, escuchando = false, terminoComando = false;
+  let acumuladoVoz = '';
   function initReconocedor() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return null;
     const r = new SR();
     r.lang = 'es-MX';
-    r.continuous = false;
+    r.continuous = true;       // No se detiene en pausas
     r.interimResults = true;
     r.maxAlternatives = 1;
-    let finalText = '';
     r.onstart = () => {
-      escuchando = true; finalText = '';
+      escuchando = true; terminoComando = false; acumuladoVoz = '';
       $('#btnMicrofono').classList.add('listening');
-      $('#btnMicrofono').querySelector('.mic-label').textContent = 'Escuchando… toca para terminar';
-      vozMostrarEstado('Habla ahora…');
+      $('#btnMicrofono').querySelector('.mic-label').textContent = 'Escuchando — di "imprime ticket" o "guarda venta" para terminar';
+      vozMostrarEstado('Habla ahora… (sigue dictando)');
       vozMostrarTranscript('');
     };
     r.onresult = e => {
+      let nuevoFinal = '';
       let interim = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const res = e.results[i];
-        if (res.isFinal) finalText += res[0].transcript + ' ';
+        if (res.isFinal) nuevoFinal += res[0].transcript + ' ';
         else interim += res[0].transcript;
       }
-      vozMostrarTranscript((finalText + interim).trim());
+      if (nuevoFinal) {
+        acumuladoVoz += nuevoFinal;
+        const cmd = procesarTranscripcion(nuevoFinal.trim());
+        // Si la frase contenia un comando terminador, detener escucha
+        if (cmd === 'imprimir' || cmd === 'guardar') {
+          terminoComando = true;
+          escuchando = false;
+          try { r.stop(); } catch(e) {}
+        }
+      }
+      vozMostrarTranscript((acumuladoVoz + interim).trim());
     };
     r.onerror = e => {
+      // Errores comunes durante pausas: no-speech, audio-capture — ignorar para no parar
+      if (e.error === 'no-speech' || e.error === 'audio-capture' || e.error === 'aborted') return;
       vozMostrarEstado('Error: ' + e.error, 'error');
     };
     r.onend = () => {
+      // Si el usuario no pidio terminar, reiniciar la escucha
+      if (escuchando && !terminoComando) {
+        try { r.start(); return; } catch(err) { /* fallback */ }
+      }
       escuchando = false;
       $('#btnMicrofono').classList.remove('listening');
       $('#btnMicrofono').querySelector('.mic-label').textContent = 'Toca y dicta el pedido';
-      if (finalText.trim()) {
-        procesarTranscripcion(finalText.trim());
-      } else {
+      if (!acumuladoVoz.trim()) {
         vozMostrarEstado('No se escuchó nada', 'error');
       }
     };
@@ -935,8 +950,13 @@
       return;
     }
     if (!reconocedor) reconocedor = initReconocedor();
-    if (escuchando) { try { reconocedor.stop(); } catch(e) {} }
-    else { try { reconocedor.start(); } catch(e) { vozMostrarEstado('No se pudo iniciar', 'error'); } }
+    if (escuchando) {
+      escuchando = false;       // primero, para que onend no reinicie
+      terminoComando = true;
+      try { reconocedor.stop(); } catch(e) {}
+    } else {
+      try { reconocedor.start(); } catch(e) { vozMostrarEstado('No se pudo iniciar', 'error'); }
+    }
   }
 
   // ===== Inventario =====
