@@ -129,18 +129,31 @@
   }
 
   async function sincronizar() {
-    if (!navigator.onLine || !state.backendUrl) return;
+    if (!state.backendUrl) { toast('Falta URL del backend', 'error'); return; }
+    if (!navigator.onLine) { toast('Sin conexión a internet', 'error'); return; }
     const pend = [...state.pendientes];
-    for (const p of pend) {
+    if (!pend.length) { toast('No hay pendientes', 'ok'); return; }
+    toast(`Subiendo ${pend.length} pendientes…`);
+    let ok = 0, fail = 0;
+    for (let i = 0; i < pend.length; i++) {
+      const p = pend[i];
       try {
         const r = await api(null, p);
-        if (r.ok) {
+        if (r && r.ok) {
           state.pendientes = state.pendientes.filter(x => x._id !== p._id);
           guardarLS('pendientes', state.pendientes);
+          ok++;
+        } else {
+          fail++;
+          console.error('Sync fail:', p._id, r && r.error, p);
         }
-      } catch (e) { break; }
+      } catch (e) {
+        fail++;
+        console.error('Sync exception:', p._id, e.message, p);
+      }
+      setEstadoSync();
     }
-    setEstadoSync();
+    toast(`Sync: ${ok} OK, ${fail} fallidos`, fail ? 'error' : 'ok');
   }
 
   // ===== VENTA =====
