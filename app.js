@@ -135,6 +135,7 @@
     if (!pend.length) { toast('No hay pendientes', 'ok'); return; }
     toast(`Subiendo ${pend.length} pendientes…`);
     let ok = 0, fail = 0;
+    let primerError = '';
     for (let i = 0; i < pend.length; i++) {
       const p = pend[i];
       try {
@@ -145,15 +146,35 @@
           ok++;
         } else {
           fail++;
+          if (!primerError) primerError = `[${p.accion||'?'}] ${(r && r.error) || 'sin respuesta'}`;
           console.error('Sync fail:', p._id, r && r.error, p);
         }
       } catch (e) {
         fail++;
+        if (!primerError) primerError = `[${p.accion||'?'}] EXC: ${e.message}`;
         console.error('Sync exception:', p._id, e.message, p);
       }
       setEstadoSync();
     }
-    toast(`Sync: ${ok} OK, ${fail} fallidos`, fail ? 'error' : 'ok');
+    if (fail) {
+      toast(`OK:${ok} Falla:${fail} → ${primerError.substring(0,80)}`, 'error');
+    } else {
+      toast(`✓ ${ok} sincronizados`, 'ok');
+    }
+  }
+
+  // Mostrar pendientes en pantalla para diagnostico
+  function mostrarPendientes() {
+    const pend = state.pendientes;
+    let txt = `${pend.length} pendientes\n\n`;
+    pend.forEach((p, i) => {
+      txt += `${i+1}. accion=${p.accion} `;
+      if (p.modelorama_nombre) txt += `| ${p.modelorama_nombre} `;
+      if (p.motivo) txt += `| motivo=${p.motivo}`;
+      if (p.items) txt += `| items=${p.items.length}`;
+      txt += '\n';
+    });
+    alert(txt);
   }
 
   // ===== VENTA =====
@@ -1306,6 +1327,7 @@
       catch (e) { toast('✗ ' + e.message, 'error'); }
     });
     $('#btnSync').addEventListener('click', sincronizar);
+    const bvp = $('#btnVerPend'); if (bvp) bvp.addEventListener('click', mostrarPendientes);
 
     // Productos config
     $('#btnAgregarProd').addEventListener('click', agregarProducto2);
