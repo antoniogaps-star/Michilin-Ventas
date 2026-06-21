@@ -115,6 +115,31 @@
       <div id="vozEstado" class="muted small" style="margin-top:8px; text-align:center; min-height:18px;"></div>
       <div id="vozTranscript" class="voz-transcript" hidden></div>
     </div>
+
+    <!-- 7. Cliente no compró -->
+    <div class="card visita-inline-card">
+      <button id="btnAbrirVisitaInline" type="button" class="btn-no-compro">
+        🚫 El cliente no compró
+      </button>
+      <div id="visitaInlinePanel" hidden style="margin-top:12px;">
+        <p class="muted small" style="margin:0 0 8px;">Selecciona el motivo:</p>
+        <div class="motivos-grid">
+          <button type="button" class="btn-motivo-vi" data-motivo-vi="TIENE MICHILIN">🍯 Tiene Michilin</button>
+          <button type="button" class="btn-motivo-vi" data-motivo-vi="COMPETENCIA">🏁 Competencia</button>
+          <button type="button" class="btn-motivo-vi" data-motivo-vi="CERRADO">🔒 Cerrado</button>
+          <button type="button" class="btn-motivo-vi" data-motivo-vi="NO QUISO">🚫 No quiso</button>
+          <button type="button" class="btn-motivo-vi" data-motivo-vi="SIN DINERO">💸 Sin dinero</button>
+          <button type="button" class="btn-motivo-vi" data-motivo-vi="OTRO">✏️ Otro</button>
+        </div>
+        <input type="text" id="motivoOtroTxtVi" placeholder="Especifica el motivo…" style="margin-top:8px;" hidden />
+        <input type="text" id="notaVisitaVi" placeholder="Nota (opcional)…" style="margin-top:8px;" />
+        <p id="msgFaltaVi" class="muted small" style="text-align:center; margin:8px 0; color:var(--warn); font-weight:500;" hidden></p>
+        <div class="row" style="gap:8px; margin-top:8px;">
+          <button class="btn" id="btnCancelarVisitaVi" type="button" style="flex:1;">Cancelar</button>
+          <button class="btn primary" id="btnGuardarVisitaVi" type="button" style="flex:1;" disabled>💾 Guardar visita</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Modal: ayuda de voz -->

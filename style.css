@@ -309,3 +309,25 @@ textarea { resize: vertical; font-family: inherit; }
 .btn-motivo.selected {
   border-color: var(--primary); background: #fff0ed; color: var(--primary);
 }
+
+/* === Cliente no compro (inline en venta) === */
+.visita-inline-card { background: #fff7f4; border: 1px solid #ffe0d6; }
+.btn-no-compro {
+  width: 100%; padding: 14px; border-radius: 12px;
+  background: white; color: var(--primary);
+  border: 2px solid var(--primary); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: transform .15s;
+}
+.btn-no-compro:active { transform: scale(.97); }
+.btn-no-compro.activo {
+  background: var(--primary); color: white;
+}
+.btn-motivo-vi {
+  padding: 14px 8px; border-radius: 12px; border: 2px solid var(--border);
+  background: white; color: #333; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.btn-motivo-vi:active { transform: scale(.97); }
+.btn-motivo-vi.selected {
+  border-color: var(--primary); background: #fff0ed; color: var(--primary);
+}

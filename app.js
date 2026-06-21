@@ -149,6 +149,14 @@
     $('#fechaVenta').value = state.venta.fecha;
     $('#modSel').hidden = true;
     $('#notaVenta').value = '';
+    // Cerrar panel de visita sin venta si quedo abierto
+    const pVi = $('#visitaInlinePanel');
+    if (pVi) {
+      pVi.hidden = true;
+      const b = $('#btnAbrirVisitaInline');
+      if (b) { b.classList.remove('activo'); b.textContent = '🚫 El cliente no compró'; }
+      _visitaViMotivo = '';
+    }
     renderCarrito();
     actualizarTotales();
   }
@@ -487,6 +495,91 @@
     }
   }
   function imprimirHoja() { window.print(); }
+
+  // ===== Visita sin venta INLINE (desde pantalla de venta) =====
+  let _visitaViMotivo = '';
+
+  function abrirVisitaInline() {
+    if (!state.venta.modelorama) {
+      toast('Primero elige el modelorama', 'error');
+      return;
+    }
+    const panel = $('#visitaInlinePanel');
+    const btn = $('#btnAbrirVisitaInline');
+    const abierto = !panel.hidden;
+    if (abierto) {
+      panel.hidden = true; btn.classList.remove('activo');
+      btn.textContent = '🚫 El cliente no compró';
+    } else {
+      panel.hidden = false; btn.classList.add('activo');
+      btn.textContent = '✕ Cerrar registro de visita';
+      resetVisitaInline();
+    }
+  }
+
+  function resetVisitaInline() {
+    _visitaViMotivo = '';
+    $$('.btn-motivo-vi').forEach(b => b.classList.remove('selected'));
+    $('#motivoOtroTxtVi').hidden = true; $('#motivoOtroTxtVi').value = '';
+    $('#notaVisitaVi').value = '';
+    $('#msgFaltaVi').hidden = true;
+    $('#btnGuardarVisitaVi').disabled = true;
+  }
+
+  function seleccionarMotivoVi(btn) {
+    $$('.btn-motivo-vi').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    _visitaViMotivo = btn.dataset.motivoVi;
+    const esOtro = _visitaViMotivo === 'OTRO';
+    $('#motivoOtroTxtVi').hidden = !esOtro;
+    if (esOtro) setTimeout(() => $('#motivoOtroTxtVi').focus(), 100);
+    actualizarBotonVisitaVi();
+  }
+
+  function actualizarBotonVisitaVi() {
+    const sinMotivo = !_visitaViMotivo;
+    const otroVacio = _visitaViMotivo === 'OTRO' && !$('#motivoOtroTxtVi').value.trim();
+    const valido = !sinMotivo && !otroVacio;
+    $('#btnGuardarVisitaVi').disabled = !valido;
+    const msg = $('#msgFaltaVi');
+    if (sinMotivo) { msg.textContent = '⚠ Falta seleccionar motivo'; msg.hidden = false; }
+    else if (otroVacio) { msg.textContent = '⚠ Especifica el motivo'; msg.hidden = false; }
+    else { msg.hidden = true; }
+  }
+
+  async function guardarVisitaInline() {
+    if (!state.venta.modelorama || !_visitaViMotivo) return;
+    const motivoFinal = _visitaViMotivo === 'OTRO'
+      ? ($('#motivoOtroTxtVi').value.trim().toUpperCase() || 'OTRO')
+      : _visitaViMotivo;
+    const d = new Date();
+    const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    const payload = {
+      accion: 'visita_sin_venta',
+      fecha: state.venta.fecha,
+      hora,
+      modelorama_num: state.venta.modelorama.numero,
+      modelorama_nombre: state.venta.modelorama.nombre,
+      motivo: motivoFinal,
+      nota: $('#notaVisitaVi').value.trim(),
+      _id: 'vis_' + Date.now() + '_' + Math.random().toString(36).slice(2,7)
+    };
+    let enviado = false;
+    if (navigator.onLine && state.backendUrl) {
+      try {
+        const r = await api(null, payload);
+        if (r.ok) enviado = true;
+        else toast('Error: ' + (r.error || ''), 'error');
+      } catch (e) {}
+    }
+    if (!enviado) {
+      state.pendientes.push(payload);
+      guardarLS('pendientes', state.pendientes);
+    }
+    setEstadoSync();
+    toast(enviado ? '✓ Visita guardada' : '✓ Guardada (pendiente)', 'ok');
+    ir('home');
+  }
 
   // ===== Visita sin venta =====
   function initVisita() {
@@ -1129,6 +1222,22 @@
     if (btnMic) btnMic.addEventListener('click', toggleMicrofono);
     const btnAyV = $('#btnAyudaVoz');
     if (btnAyV) btnAyV.addEventListener('click', () => { $('#modalAyudaVoz').hidden = false; });
+
+    // Visita sin venta INLINE (en pantalla de venta)
+    const btnAVi = $('#btnAbrirVisitaInline');
+    if (btnAVi) btnAVi.addEventListener('click', abrirVisitaInline);
+    $$('.btn-motivo-vi').forEach(b => b.addEventListener('click', () => seleccionarMotivoVi(b)));
+    const motOtroVi = $('#motivoOtroTxtVi');
+    if (motOtroVi) motOtroVi.addEventListener('input', actualizarBotonVisitaVi);
+    const btnCanVi = $('#btnCancelarVisitaVi');
+    if (btnCanVi) btnCanVi.addEventListener('click', () => {
+      $('#visitaInlinePanel').hidden = true;
+      const b = $('#btnAbrirVisitaInline');
+      b.classList.remove('activo');
+      b.textContent = '🚫 El cliente no compró';
+    });
+    const btnGuVi = $('#btnGuardarVisitaVi');
+    if (btnGuVi) btnGuVi.addEventListener('click', guardarVisitaInline);
 
     // Edicion de cantidades dentro del ticket
     $('#ticketCarritoBody').addEventListener('change', e => {
