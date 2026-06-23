@@ -1,4 +1,4 @@
-const CACHE = 'michilin-v18';
+const CACHE = 'michilin-v19';
 const ASSETS = [
   './',
   './index.html',
@@ -6,10 +6,8 @@ const ASSETS = [
   './app.js',
   './catalogo.js',
   './manifest.json',
-  './icons/icon-192-v2.png',
-  './icons/icon-512-v2.png',
-  './icons/splash-192.png',
-  './icons/splash-512.png'
+  './icons/icon-192-v3.png',
+  './icons/icon-512-v3.png'
 ];
 
 self.addEventListener('install', e => {
